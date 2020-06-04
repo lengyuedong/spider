@@ -5,9 +5,9 @@
 # @Date&Time: 2019/12/13 12:38
 # @Description: 爬虫入口
 
-from gui import SpiderGUI
-from read_excel import ExcelReader
-from spider_chrome import ChromeSpider
+from allpy.gui import SpiderGUI
+from allpy.read_excel import ExcelReader
+from allpy.spider_chrome import ChromeSpider
 
 
 spider_gui = SpiderGUI()

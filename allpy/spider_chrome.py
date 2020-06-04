@@ -16,10 +16,10 @@ class ChromeSpider(Chrome):
 
     def __init__(self):
         options = Options()
-        options.add_argument('--no-sandbox')                        # 解决 DevToolsActivePort 文件不存在的报错
+        options.add_argument('--no-sandbox')  # 解决 DevToolsActivePort 文件不存在的报错
         # options.add_argument('window-size=1920x3000')               # 指定浏览器分辨率
-        options.add_argument('--disable-gpu')                       # 谷歌文档提到需要加上这个属性来规避bug
-        options.add_argument('--hide-scrollbars')                   # 隐藏滚动条, 应对一些特殊页面
+        options.add_argument('--disable-gpu')  # 谷歌文档提到需要加上这个属性来规避bug
+        options.add_argument('--hide-scrollbars')  # 隐藏滚动条, 应对一些特殊页面
         # options.add_argument('blink-settings=imagesEnabled=false')  # 不加载图片, 提升速度
         # options.add_argument('--headless')                          # 浏览器不提供可视化页面. linux下如果系统不支持可视化不加这条会启动失败
         # options.add_argument("user-data-dir=" + USER_DIR)            # 使用当前 chrome 的用户目录数据（需要关闭正在运行的 chrome）
@@ -37,10 +37,10 @@ class ChromeSpider(Chrome):
         self.get('https://www.kuaidi100.com/?from=openv')
 
         # 关闭弹窗红包
-        popup = self.find_element_by_class_name('coupon-pop-close')
-        if popup is not None:
-            popup.click()
-            time.sleep(0.5)
+        # popup = self.find_element_by_class_name('coupon-pop-close')
+        # if popup is not None:
+        #     popup.click()
+        #     time.sleep(0.5)
 
         # 定位元素并滑动到该位置
         self.__input_express_num = self.find_element_by_id('postid')
@@ -52,16 +52,20 @@ class ChromeSpider(Chrome):
 
         # 批量爬取
         for express_num in express_num_list:
-            self.__crawl_one_express(express_num)
+            if not self.__crawl_one_express(express_num):
+                for i in range(3):
+                    time.sleep(1)
+                    if self.__crawl_one_express(express_num):
+                        break
 
     def __crawl_one_express(self, express_num):
 
         # 模拟输入快递单号查询操作
-        self.__input_express_num.send_keys(express_num)
+        self.__input_express_num.send_keys(express_num.one)
         self.__input_express_num.click()
         time.sleep(0.5)
         self.__button_search_express.click()
-        time.sleep(1)
+        time.sleep(1.5)
 
         # 屏幕截图保存后裁剪，删除原图
         self.get_screenshot_as_file('tmp.png')
@@ -72,8 +76,13 @@ class ChromeSpider(Chrome):
         bottom = top + ele.size['height']
         crop_image = Image.open('tmp.png')
         crop_image = crop_image.crop((left, top, right, bottom))
-        crop_image.save(self.__path_save_images + express_num + '.png')
+        crop_image.save(self.__path_save_images + express_num.two + '.png')
         os.remove('tmp.png')
+
+        if abs(bottom - top) == 266:
+            return False
+
+        return True
 
 
 if __name__ == '__main__':
